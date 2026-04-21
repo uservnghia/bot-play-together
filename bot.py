@@ -40,7 +40,6 @@ async def handle_giftcode(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     api_url = 'https://vgrapi-sea.vnggames.com/coordinator/api/v1/code/redeem' 
     
-    # 1. CẬP NHẬT HEADERS: Copy chính xác từ ảnh F12 của bạn
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0',
         'Content-Type': 'application/json',
@@ -56,11 +55,11 @@ async def handle_giftcode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     ket_qua_tong_hop = f"📊 **Kết quả mã {giftcode}:**\n\n"
 
-for idx, uid in enumerate(danh_sach_id_chay):
-        # 1. TRẢ LẠI DẤU NHÁY KÉP CHO 2 VỊ TRÍ NÀY (Định dạng chuỗi)
+    for idx, uid in enumerate(danh_sach_id_chay):
+        # PAYLOAD: Đã trả lại dạng Chuỗi (có dấu nháy)
         payload = {
-            "serverId": "2",     
-            "gameCode": "661",   
+            "serverId": "2",
+            "gameCode": "661",
             "roleId": uid,
             "roleName": uid,
             "code": giftcode
@@ -71,22 +70,20 @@ for idx, uid in enumerate(danh_sach_id_chay):
             
             if response.status_code == 200:
                 data = response.json()
+                
                 if str(data.get('returnCode')) == '1':
                     ket_qua_tong_hop += f"✅ TK {idx + 1} ({uid}): Thành công\n"
                 else:
                     thong_bao = data.get('returnMessage') or data.get('message') or "Lỗi không xác định"
                     ket_qua_tong_hop += f"❌ TK {idx + 1} ({uid}): {thong_bao}\n"
             else:
-                # 2. IN THẲNG LÝ DO SERVER TỪ CHỐI RA TELEGRAM (Chiêu gỡ lỗi cuối cùng)
+                # IN THẲNG LÝ DO SERVER TỪ CHỐI RA TELEGRAM (Chiêu gỡ lỗi cuối cùng)
                 loi_chi_tiet = response.text 
                 ket_qua_tong_hop += f"⚠️ TK {idx + 1} ({uid}): Lỗi {response.status_code} - {loi_chi_tiet}\n"
                 
         except Exception as e:
             ket_qua_tong_hop += f"🚨 TK {idx + 1} ({uid}): Lỗi kết nối\n"
             
-        time.sleep(1)
-            
-        # Nghỉ 1 giây để tránh bị VNG quét spam
         time.sleep(1)
 
     await update.message.reply_text(ket_qua_tong_hop, parse_mode='Markdown')
