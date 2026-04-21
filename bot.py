@@ -11,9 +11,13 @@ TELEGRAM_BOT_TOKEN = '8386484128:AAHyzgK9kN8K-Iu6rFILWSlR2wp0iAHo_8Y'
 # Tách riêng các ID để dễ quản lý
 ID_1 = 'EKDG-FU9L-LMYC'
 ID_2 = 'FKAB-XTZL-LMGU'
+ID_3 = 'SM8E-ZTHL-LMYC'
+ID_4 = 'MMEH-HSHL-LMGG'
+ID_5 = 'NMDA-HTHL-LMGG'
+ID_6 = '9L6B-XS9L-LMGC'
 
 # Đưa các ID muốn chạy vào danh sách này
-GAME_IDS = [ID_1, ID_2] 
+GAME_IDS = [ID_1, ID_2, ID_3, ID_4, ID_5, ID_6] 
 
 # ================= HÀM XỬ LÝ KẾT NỐI MẠNG (KEEP-ALIVE) =================
 app = Flask('')
