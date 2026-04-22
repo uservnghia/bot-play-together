@@ -9,8 +9,8 @@ from threading import Thread
 TELEGRAM_BOT_TOKEN = '8386484128:AAHyzgK9kN8K-Iu6rFILWSlR2wp0iAHo_8Y'
 
 # Tách riêng các ID để dễ quản lý
-ID_1 = 'EKDG-FU9L-LMYC'
-ID_2 = 'FKAB-XTZL-LMGU'
+ID_1 = 'NMDA-HTHL-LMGG'
+ID_2 = 'MMEH-HSHL-LMGG'
 
 # Đưa các ID muốn chạy vào danh sách này
 GAME_IDS = [ID_1, ID_2] 
