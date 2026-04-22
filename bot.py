@@ -8,22 +8,19 @@ from threading import Thread
 # ================= CẤU HÌNH CỦA BẠN =================
 TELEGRAM_BOT_TOKEN = '8386484128:AAHyzgK9kN8K-Iu6rFILWSlR2wp0iAHo_8Y'
 
-# Danh sách 6 ID của ông giáo
+# Tách riêng các ID để dễ quản lý
 ID_1 = 'EKDG-FU9L-LMYC'
 ID_2 = 'FKAB-XTZL-LMGU'
-ID_3 = 'SM8E-ZTHL-LMYC'
-ID_4 = 'MMEH-HSHL-LMGG'
-ID_5 = 'NMDA-HTHL-LMGG'
-ID_6 = '9L6B-XS9L-LMGC'
 
-GAME_IDS = [ID_1, ID_2, ID_3, ID_4, ID_5, ID_6] 
+# Đưa các ID muốn chạy vào danh sách này
+GAME_IDS = [ID_1, ID_2] 
 
 # ================= HÀM XỬ LÝ KẾT NỐI MẠNG (KEEP-ALIVE) =================
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot Play Together đang chạy ổn định!"
+    return "Bot đang sống nhăn răng!"
 
 def run_server():
     app.run(host='0.0.0.0', port=8080)
@@ -34,12 +31,12 @@ def keep_alive():
 
 # ================= HÀM XỬ LÝ BOT =================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('Chào ông giáo! Gửi giftcode vào đây, tui sẽ nạp cho cả 6 acc.')
+    await update.message.reply_text('Chào bạn! Gửi giftcode vào đây nhé.')
 
 async def handle_giftcode(update: Update, context: ContextTypes.DEFAULT_TYPE):
     giftcode = update.message.text.strip()
     danh_sach_id_chay = [uid for uid in GAME_IDS if uid != '']
-    await update.message.reply_text(f'⏳ Đang cày mã: {giftcode} cho {len(danh_sach_id_chay)} tài khoản...')
+    await update.message.reply_text(f'⏳ Đang nhập mã: {giftcode}...')
 
     api_url = 'https://vgrapi-sea.vnggames.com/coordinator/api/v1/code/redeem' 
     
@@ -49,12 +46,17 @@ async def handle_giftcode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'Accept': 'application/json, text/plain, */*',
         'Origin': 'https://giftcode.vnggames.com',
         'Referer': 'https://giftcode.vnggames.com/',
-        'X-Client-Region': 'VN'
+        'X-Client-Region': 'VN',
+        'Dnt': '1',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site'
     }
     
-    ket_qua_tong_hop = f"📊 **KẾT QUẢ MÃ {giftcode}:**\n\n"
+    ket_qua_tong_hop = f"📊 **Kết quả mã {giftcode}:**\n\n"
 
     for idx, uid in enumerate(danh_sach_id_chay):
+        # PAYLOAD: Đã trả lại dạng Chuỗi (có dấu nháy)
         payload = {
             "serverId": "2",
             "gameCode": "661",
@@ -64,47 +66,35 @@ async def handle_giftcode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         
         try:
-            # Gửi request nạp code
             response = requests.post(api_url, json=payload, headers=headers, timeout=10)
             
-            # Cố gắng đọc JSON từ server bất kể mã HTTP là gì
-            try:
+            if response.status_code == 200:
                 data = response.json()
-            except:
-                data = None
-            
-            # Trường hợp 1: Server báo thành công (200 OK và returnCode = 1)
-            if response.status_code == 200 and data and str(data.get('returnCode')) == '1':
-                ket_qua_tong_hop += f"✅ TK {idx + 1} ({uid}): Thành công\n"
-            
-            # Trường hợp 2: Server trả về lỗi (như Code đã dùng, Code sai...)
-            elif data:
-                # Bóc tách tin nhắn lỗi tiếng Việt/Anh từ VNG
-                msg = data.get('message') or data.get('description') or data.get('returnMessage') or "Lỗi không xác định"
-                ket_qua_tong_hop += f"❌ TK {idx + 1} ({uid}): {msg}\n"
-            
-            # Trường hợp 3: Lỗi kết nối server thật sự
-            else:
-                ket_qua_tong_hop += f"⚠️ TK {idx + 1} ({uid}): Lỗi hệ thống {response.status_code}\n"
                 
-        except Exception:
-            ket_qua_tong_hop += f"🚨 TK {idx + 1} ({uid}): Lỗi mạng\n"
+                if str(data.get('returnCode')) == '1':
+                    ket_qua_tong_hop += f"✅ TK {idx + 1} ({uid}): Thành công\n"
+                else:
+                    thong_bao = data.get('returnMessage') or data.get('message') or "Lỗi không xác định"
+                    ket_qua_tong_hop += f"❌ TK {idx + 1} ({uid}): {thong_bao}\n"
+            else:
+                # IN THẲNG LÝ DO SERVER TỪ CHỐI RA TELEGRAM (Chiêu gỡ lỗi cuối cùng)
+                loi_chi_tiet = response.text 
+                ket_qua_tong_hop += f"⚠️ TK {idx + 1} ({uid}): Lỗi {response.status_code} - {loi_chi_tiet}\n"
+                
+        except Exception as e:
+            ket_qua_tong_hop += f"🚨 TK {idx + 1} ({uid}): Lỗi kết nối\n"
             
-        # Nghỉ 1.5 giây mỗi acc cho chắc cú, tránh bị VNG khóa IP
-        time.sleep(1.5)
+        time.sleep(1)
 
     await update.message.reply_text(ket_qua_tong_hop, parse_mode='Markdown')
 
 def main():
-    # Bật web server để UptimeRobot có thể 'chọc' vào
     keep_alive()
-    
-    # Chạy bot Telegram
     app_bot = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_giftcode))
     
-    print("Bot đã sẵn sàng chiến đấu!")
+    print("Bot đang chạy...")
     app_bot.run_polling()
 
 if __name__ == '__main__':
